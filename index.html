@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+
+    <title>Absensi System</title>
+    <style>
+        body {
+            background-image: url("assets/img/bg.jpg");
+            /* Full height */
+            height: 100%;
+
+            /* Center and scale the image nicely */
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .card {
+            background-color: rgba(245, 245, 245, 0.4);
+        }
+
+        .card-header,
+        .card-footer {
+            opacity: 1
+        }
+        .btn-custom{
+            background-color: #4cb5e6;
+            color: aliceblue;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container pt-5">
+        <div class="pt-5">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header text-center">
+                    <h4>Absensi System</h4>
+                </div>
+                <div class="card-body">
+                    <form id="absen-form">
+                        <input type="hidden" name="lokasi" id="lokasi">
+                        <input type="hidden" name="foto" id="foto">
+                        <div class="d-flex justify-content-center">
+                            <div id="my_camera"></div>
+                        </div>
+                        <div id="results"></div>
+                        <div class="row form-group">
+                            <div class="col-lg-3"></div>
+                            <div class="col-lg-6">
+                                <label for=""></label>
+                                <input type="text" placeholder="Masukan NIK" name="nik" id="nik" class="form-control" required>
+                            </div>
+                            <div class="col-lg-3"></div>
+                        </div>
+                        <div class="text-center">
+                            <button class="btn btn-custom" id="masuk" type="button">Absen Masuk</button>
+                            <button class="btn btn-custom" id="pulang" type="button">Absen Pulang</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+    <script src="assets/js/webcam.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <script>
+        Webcam.set({
+            width: 600,
+            height: 450,
+            image_format: 'jpeg',
+            jpeg_quality: 90
+        });
+        Webcam.attach('#my_camera');
+
+        function take_snapshot() {
+            Webcam.snap(function (data_uri) {
+                $('#foto').val(data_uri)
+            });
+        }
+
+        function lokasi() {
+            if ("geolocation" in navigator) { //check geolocation available 
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    var kordinat = position.coords.latitude + ',' + position.coords.longitude;
+                    $('#lokasi').val(kordinat)
+                })
+            } else {
+                alert("Browser doesn't support geolocation!");
+            }
+        }
+
+        function notif(x) {
+            if (x.success) {
+                swal({
+                    title: "Success",
+                    text: x.msg,
+                    icon: "success",
+                    button: false
+                });
+            } else {
+                swal({
+                    title: "Error",
+                    text: x.msg,
+                    icon: "error",
+                    button: false
+                });
+            }
+        }
+
+        $(document).ready(function () {
+            lokasi()
+            $('#masuk').click(function (e) {
+                e.preventDefault()
+                take_snapshot()
+                $.post("http://asi.adyawinsa.com:805/Main/masuk", {
+                        nik: $('#nik').val(),
+                        lokasi: $('#lokasi').val(),
+                        foto: $('#foto').val(),
+                        act: 1
+                    },
+                    function (data) {
+                        notif(data)
+                    },
+                    "json"
+                );
+            });
+            $('#pulang').click(function (e) {
+                e.preventDefault()
+                take_snapshot()
+                $.post("http://asi.adyawinsa.com:805/Main/pulang", {
+                        nik: $('#nik').val(),
+                        lokasi: $('#lokasi').val(),
+                        foto: $('#foto').val(),
+                        act: 2
+                    },
+                    function (data) {
+                        notif(data)
+                    },
+                    "json"
+                );
+            });
+        });
+    </script>
+</body>
+
+</html>
